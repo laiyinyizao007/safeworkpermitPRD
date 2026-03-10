@@ -1,6 +1,6 @@
-# 四层解耦架构设计
+# 八层解耦架构设计
 
-**文档版本**：v1.0
+**文档版本**：v3.0
 **最后更新**：2026-03-10
 **文档状态**：已发布
 **作者**：产品架构团队
@@ -24,13 +24,28 @@
 - 移动端（Flutter/React Native）
 - PC端（Vue3/React）
 - IoT设备接入（MQTT/HTTP）
-- 多种数据存储（MySQL、Redis、InfluxDB、MinIO）
+- 多种数据存储（MySQL、Redis、InfluxDB、MinIO、Neo4j、Milvus）
 
 **挑战3：合规性要求严格**
 - GB 30871-2022强制性标准
 - 电子签名法
 - 数据不可篡改
 - 全程留痕审计
+
+**挑战4：AI决策可信度**
+- 复杂安全逻辑需要跨文档依赖推理
+- 模型幻觉可能导致误判
+- AI决策需要可解释性与人机协同
+
+**挑战5：大规模实时并发**
+- 化工园区数千名作业人员 + 万级传感器点位
+- 毫秒级异常检测与报警
+- 边缘弱网环境下的离线自治
+
+**挑战6：多租户SaaS公平性**
+- 大客户复杂作业占用过多资源（Noisy Neighbor）
+- 小客户安全实时性受影响
+- 数据主权与隔离要求
 
 ### 1.3 设计目标
 
@@ -81,7 +96,7 @@ flowchart TD
     C3 --> D3
 ```
 
-### 2.2 四层职责说明
+### 2.2 八层职责说明
 
 #### 第一层：表现层（Presentation Layer）
 
@@ -178,7 +193,123 @@ flowchart TD
 
 ---
 
-#### 第四层：基础设施层（Infrastructure Layer）
+#### 第四层：认知决策层（Cognitive Decision Layer）**【v3.0 新增】**
+
+**职责**：AI驱动的智能决策与知识推理
+
+**核心组件**：
+
+1. **知识图谱引擎（Knowledge Graph Engine）**
+   - 技术选型：Neo4j / ArangoDB
+   - SPO三元组存储（主体-谓词-客体）
+   - 示例："白酒库-要求-12次/h换气"
+   - 跨文档依赖关系发现，消除模型幻觉
+
+2. **多专家推理（Reasoning of Expert, RoE）**
+   - 三角色模拟：注册安全工程师、工艺设备专家、合规审计员
+   - 共识算法（Consensus Algorithm）
+   - 独立判研后生成统一结论
+
+3. **可解释AI（XAI）**
+   - SHAP/LIME归因分析
+   - 风险评分可视化（如：承包商资质40% + 气体波动30% + 维修记录15%）
+   - 透明推理路径展示
+
+**设计原则**：
+- 知识驱动决策（Knowledge-Driven）
+- 多模型协作验证
+- 决策可解释、可追溯
+
+---
+
+#### 第五层：数据骨干网层（Data Backbone Layer）**【v3.0 新增】**
+
+**职责**：高并发有状态流处理
+
+**核心组件**：
+
+1. **流处理引擎（Apache Flink）**
+   - 毫秒级窗口聚合
+   - 模式匹配（Pattern Matching）
+   - Exactly-once交付保证
+
+2. **消息队列（Kafka）**
+   - 高频IoT消息（万级传感器点位）
+   - 事件驱动架构
+   - 分区并行处理
+
+3. **实时异常检测**
+   - 人员聚集预警（半径15m持续1min超过6人 → 5s内触发报警）
+   - LEL（爆炸下限）监测
+   - 状态持久化（Flink State Backend）
+
+**设计原则**：
+- 流批一体（Stream-Batch Unified）
+- 状态管理（Stateful Processing）
+- 容错与恢复（Fault Tolerance）
+
+---
+
+#### 第六层：边缘弹性层（Edge Resilience Layer）**【v3.0 新增】**
+
+**职责**：云边协同与离线自治
+
+**核心组件**：
+
+1. **边缘智能网关（Edge Gateway）**
+   - 技术选型：KubeEdge
+   - 协议适配（MQTT/Modbus/OPC-UA）
+   - 边缘计算能力
+
+2. **边缘异常检测**
+   - Gaussian/Bayesian算法
+   - 正常工况下本地过滤，异常时上传全量数据
+   - LEL数值漂移检测
+
+3. **离线推理（Offline Inference）**
+   - Small LLM部署（Phi/Llama蒸馏版）
+   - 断网环境下语音应急响应
+   - 本地IoT执行器联动（LEL > 10%自动切断酒泵电源）
+
+**设计原则**：
+- 离线优先（Offline-First）
+- 边缘自闭环控制
+- Delta增量同步
+
+---
+
+#### 第七层：微服务编排层（Microservices Orchestration Layer）**【v3.0 新增】**
+
+**职责**：22个核心微服务的协调与治理
+
+**核心组件**：
+
+1. **服务网格（Service Mesh）**
+   - 技术选型：Istio
+   - 服务间通信（gRPC同步 + Kafka异步）
+   - 流量管理与熔断
+
+2. **多租户中间件（Multi-Tenant Middleware）**
+   - TenantContext透传
+   - Cell-based隔离（大租户独立Cell）
+   - PostgreSQL RLS（小租户共享资源）
+
+3. **微服务域划分**
+   - 基础设施与多租户域（5个服务）
+   - 特殊作业核心业务域（5个服务）
+   - 感知与时空计算域（5个服务）
+   - AI Agent认知引擎域（4个服务）
+   - 数据治理与监管域（3个服务）
+   - 详见 [微服务架构设计](./microservices-architecture.md)
+
+**设计原则**：
+- DDD领域驱动设计
+- 数据自治（Database per Service）
+- Saga分布式事务
+
+---
+
+#### 第八层：基础设施层（Infrastructure Layer）
 
 **职责**：技术基础设施支撑
 
@@ -192,6 +323,9 @@ flowchart TD
 | **地理信息** | PostGIS | 厂区坐标系、作业电子围栏 |
 | **关系数据库** | MySQL | 结构化业务数据 |
 | **时序数据库** | InfluxDB | 气体浓度、温度等时序数据 |
+| **知识图谱** | Neo4j/ArangoDB | SPO三元组、跨文档依赖 |
+| **向量数据库** | Milvus | RAG知识库、语义检索 |
+| **流处理状态** | Flink State Backend | 流计算状态持久化 |
 
 **设计原则**：
 - 混合存储（根据数据特性选择存储方案）
@@ -287,11 +421,16 @@ flowchart TD
 
 | 能力模块 | 标准依据 | 说明 | 详细设计 |
 |---|---|---|---|
-| AI Agent 引擎 | AQ 3064.2 合规审计要求 | 三智能体协作：规程合规审计、时空一致性、数据交换 | [ai-agent-engine.md](./ai-agent-engine.md) |
-| 多租户中间件 | SaaS 化部署需求 | TenantContext 透传、PostgreSQL RLS 行级安全 | [multi-tenant.md](./multi-tenant.md) |
+| AI Agent 引擎 | AQ 3064.2 合规审计要求 | 五智能体协作：规程合规审计、时空一致性、数据交换、知识图谱推理、多专家协作 | [ai-agent-engine.md](./ai-agent-engine.md) |
+| 知识图谱引擎 | AI决策可信度要求 | Neo4j/ArangoDB SPO三元组存储，跨文档依赖发现，消除模型幻觉 | [ai-agent-engine.md §知识图谱集成](./ai-agent-engine.md) |
+| 流处理引擎 | 大规模实时并发需求 | Apache Flink + Kafka，毫秒级窗口聚合，Exactly-once交付保证 | [database-design.md §流处理架构](./database-design.md) |
+| 边缘智能网关 | 边缘弱网环境自治 | KubeEdge + Small LLM，Gaussian/Bayesian异常检测，离线推理 | [iot-integration.md §边缘智能闭环](./iot-integration.md) |
+| 多租户中间件 | SaaS 化部署需求 | TenantContext 透传、Cell-based隔离、PostgreSQL RLS 行级安全 | [multi-tenant.md](./multi-tenant.md) |
 | 数据交换网关 | AQ 3064.1 附录 A/B | UUID + 企业编号 + CGCS 2000 坐标系，标准化推送至园区平台 | [ai-agent-engine.md §数据交换智能体](./ai-agent-engine.md) |
-| 标准化报警编码 | AQ 3064.2 附录 A.4 | 类型码(2位) + 子类码(2位) + 严重等级(1位) | [alarm-coding.md](./alarm-coding.md) |
-| 人员定位引擎 | AQ 3064.3 | 三维围栏、多传感器融合、±3m 精度、5m 签批围栏 | [personnel-positioning.md](./personnel-positioning.md) |
+| 标准化报警编码 | AQ 3064.2 附录 A.4 | 类型码(2位) + 子类码(2位) + 严重等级(1位)，边缘侧自闭环触发 | [alarm-coding.md](./alarm-coding.md) |
+| 人员定位引擎 | AQ 3064.3 | 三维围栏、多传感器融合、±3m 精度、5m 签批围栏、离线推理 | [personnel-positioning.md](./personnel-positioning.md) |
+| 可解释AI（XAI） | 安全治理要求 | SHAP/LIME归因分析、风险评分可视化、透明推理路径 | [security-compliance.md §AI审计溯源](./security-compliance.md) |
+| AGENTSAFE治理框架 | 人机协同与审计溯源 | AI推理路径记录、WORM存储、后量子加密、不可篡改审计链 | [security-compliance.md §AI审计溯源](./security-compliance.md) |
 
 ---
 
@@ -364,6 +503,38 @@ sequenceDiagram
 - 实时计算监护人与作业点的距离
 - 超出范围自动报警
 
+#### 3.2.5 知识图谱集成（认知决策层）**【v3.0 新增】**
+
+**场景**：AI决策需要跨文档依赖推理，消除模型幻觉
+
+**技术方案**：
+- 使用 Neo4j/ArangoDB 存储 SPO 三元组
+- 示例："白酒库-要求-12次/h换气"、"特级动火-强制要求-视频监控"
+- 跨文档依赖关系发现（如：GB 30871 → AQ 3064.2 → 企业内控标准）
+- 支持 Cypher/AQL 查询语言进行图遍历
+
+#### 3.2.6 流处理架构（数据骨干网层）**【v3.0 新增】**
+
+**场景**：万级传感器点位 + 数千名作业人员的实时并发处理
+
+**技术方案**：
+- Apache Flink 毫秒级窗口聚合（Tumbling/Sliding/Session Window）
+- Kafka 分区并行处理（按租户ID/设备ID分区）
+- 状态持久化（Flink State Backend：RocksDB）
+- 模式匹配（CEP - Complex Event Processing）
+- 示例：人员聚集预警（半径15m持续1min超过6人 → 5s内触发报警）
+
+#### 3.2.7 边缘智能闭环（边缘弹性层）**【v3.0 新增】**
+
+**场景**：弱网环境下的离线自治与毫秒级应急响应
+
+**技术方案**：
+- KubeEdge 云边协同（云端 K8s + 边缘 Kubelet）
+- Gaussian/Bayesian 异常检测（正常工况本地过滤，异常时上传全量数据）
+- Small LLM 离线推理（Phi/Llama 蒸馏版，断网环境下语音应急响应）
+- 本地 IoT 执行器联动（LEL > 10% 自动切断酒泵电源，无需云端回执）
+- Delta 增量同步（恢复网络后仅上传差异数据）
+
 ### 3.3 最佳实践
 
 #### 实践1：API网关统一入口
@@ -426,11 +597,17 @@ sequenceDiagram
 | DDD | Domain-Driven Design | 领域驱动设计 |
 | SIMOPs | Simultaneous Operations | 交叉作业/同时作业 |
 | JSA | Job Safety Analysis | 工作安全分析 |
+| KG | Knowledge Graph | 知识图谱 |
+| RoE | Reasoning of Expert | 多专家推理 |
+| Cell-based Architecture | - | 单元化架构（大租户独立Cell） |
+| HITL | Human-in-the-Loop | 人在回路（人机协同决策） |
+| XAI | Explainable AI | 可解释人工智能 |
 
 ### 5.2 版本历史
 
 | 版本 | 日期 | 变更内容 | 作者 |
 |-----|------|---------|------|
+| v3.0 | 2026-03-10 | 整合5大优化方向：认知决策层、数据骨干网、边缘弹性、多租户SaaS、安全治理；架构从四层升级至八层 | 产品架构团队 |
 | v1.0 | 2026-03-10 | 初始版本，定义四层解耦架构 | 产品架构团队 |
 
 ---
