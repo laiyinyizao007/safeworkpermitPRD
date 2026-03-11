@@ -1,7 +1,7 @@
 # 八层解耦架构设计
 
-**文档版本**：v3.0
-**最后更新**：2026-03-10
+**文档版本**：v3.1
+**最后更新**：2026-03-11
 **文档状态**：已发布
 **作者**：产品架构团队
 
@@ -71,12 +71,14 @@ flowchart TD
         B1[流程编排引擎<br/>BPMN 2.0]
         B2[规则引擎<br/>Drools]
         B3[交叉作业冲突矩阵<br/>SIMOPs]
+        B4[硬约束引擎<br/>C-05 Hard-Rules]
     end
 
     subgraph L3[领域核心层 Core Domain Layer]
         C1[作业票聚合<br/>Permit Aggregate]
         C2[风险识别域<br/>JSA/Risk]
         C3[人员资质域<br/>Certification]
+        C4[作业任务聚合<br/>Work Task Aggregate]
     end
 
     subgraph L4[基础设施层 Infrastructure Layer]
@@ -91,9 +93,12 @@ flowchart TD
     B1 --> C1
     B2 --> C1
     B3 --> C1
+    B4 --> C1
+    B4 --> C4
     C1 --> D1
     C2 --> D2
     C3 --> D3
+    C4 --> C1
 ```
 
 ### 2.2 八层职责说明
@@ -138,6 +143,16 @@ flowchart TD
    - 计算空间重叠：$S_i \cap S_j$
    - 计算时间重叠：$T_i \cap T_j$
    - 自动触发预警
+
+4. **硬约束引擎（Hard-Rules Engine）**
+   - 不可绕过的系统级强制规则
+   - 四大核心硬约束：
+     - HR-01 互斥逻辑（审批人 ≠ 作业人/监护人）
+     - HR-02 时效失效（气体检测 > 30min → 自动作废）
+     - HR-03 位置漂移（监护人 > 10m → 暂停作业票）
+     - HR-04 资质强制（操作证过期 → 拒绝分配）
+   - 双层执行：应用层 + 数据库层（CHECK约束 + 触发器）
+   - 详见 [硬约束引擎详细设计](./hard-rules-engine.md)
 
 **设计原则**：
 - 业务逻辑与技术实现分离
@@ -190,6 +205,14 @@ flowchart TD
    - 多智能体协作编排（规程合规审计 / 时空一致性 / 数据交换）
    - RAG 知识库（向量化存储 AQ 3064.2、GB 30871 等标准文本）
    - 详见 [AI Agent 智能体引擎架构](./ai-agent-engine.md)
+
+5. **作业任务聚合（Work Task Aggregate）**
+   - DOB NOW 模式下的"一张总票 + 动态子表"核心聚合
+   - 作业任务（Work Task）作为总票，管理基础信息（区域、时间、负责人）
+   - 8种作业票降级为子表（Sub-Schedule），通过 `parent_permit_id` 建立父子关系
+   - 安全措施自动合并（去重 + 取严格值 + 叠加）
+   - 与现有 `permit_association` 表兼容，通过 `relationship_mode` 区分平级关联和主票-子任务
+   - 详见 [DOB NOW 理念集成设计](./dob-now-integration.md)
 
 ---
 
@@ -535,6 +558,46 @@ sequenceDiagram
 - 本地 IoT 执行器联动（LEL > 10% 自动切断酒泵电源，无需云端回执）
 - Delta 增量同步（恢复网络后仅上传差异数据）
 
+#### 3.2.8 DOB NOW 理念集成**【v3.1 新增】**
+
+**场景**：从"静态表单"到"动态准入引擎"的架构升级
+
+**核心理念**：
+1. **一张总票 + 动态子表（Main Permit + Sub-Schedules）**
+   - 引入"作业任务"（Work Task）概念作为总票，8种作业票降级为子表
+   - 用户勾选涉及的作业类型，系统动态加载对应子表
+   - 安全措施自动合并（去重 + 取严格值 + 叠加特有措施）
+   - 数据模型：`work_permit_main` 表新增 `parent_permit_id`、`is_main_permit`、`task_sequence`、`role_stack` 字段
+   - 与现有 `permit_association` 表兼容，通过 `relationship_mode` 字段区分"平级关联"和"主票-子任务"
+
+2. **角色权限动态叠加（Role-Based Dynamic UI）**
+   - 根据用户资质动态点亮可操作的"动作块"（Action Block）
+   - 支持一人多角色（如：负责人 + 监护人 + 检测人）
+   - 新增 `role_action_mapping` 表，配置角色-动作映射与叠加规则
+   - 前端组件：RoleStackIndicator（角色切换指示器）
+
+3. **一人多角色工作流合并（Unified Workflow）**
+   - 时间轴任务链模式，统一视图完成多角色任务
+   - 顺序解锁机制（完成检测 → 解锁安措 → 解锁监护）
+   - 合并签署（One-Tap Attestation）：一次签署生成多条签名记录
+   - GPS 定位在签署时锁定，确保在现场
+
+4. **硬性硬约束（System Hard-Rules）**
+   - 新增 C-05 硬约束执行引擎（详见 §2.2 第二层）
+   - 四大硬约束：互斥逻辑、时效失效、位置漂移、资质强制
+   - 双层执行模型：应用层校验 + 数据库层兜底（CHECK约束 + 触发器）
+   - 不可绕过：触发时系统强制拦截，不提供"忽略"选项
+   - 可审计：所有硬约束触发事件记录到 `hard_constraint_log` 表
+
+**技术实现**：
+- 前端：SubTaskPanel（子任务面板）、RoleStackIndicator（角色栈指示器）、HardConstraintDialog（硬约束弹窗）
+- 后端：A-05 动态角色叠加引擎、C-05 硬约束执行引擎
+- 配置：配置包新增 `dob_now_config` 节（sub_task_config、role_stacking_config、workflow_merge_config、hard_constraints）
+
+**详细设计**：
+- [DOB NOW 理念集成设计](./dob-now-integration.md)
+- [硬约束引擎详细设计](./hard-rules-engine.md)
+
 ### 3.3 最佳实践
 
 #### 实践1：API网关统一入口
@@ -579,6 +642,8 @@ sequenceDiagram
 - [SIMOPs冲突检测算法](./simops-algorithm.md)
 - [安全与合规性架构](./security-compliance.md)
 - [部署架构设计](./deployment-architecture.md)
+- [DOB NOW 理念集成设计](./dob-now-integration.md)
+- [硬约束引擎详细设计](./hard-rules-engine.md)
 
 ### 4.3 产品文档
 - [PRD.md - 产品需求文档](../../产出/PRD.md)（待生成）
@@ -607,6 +672,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 变更内容 | 作者 |
 |-----|------|---------|------|
+| v3.1 | 2026-03-11 | 新增DOB NOW理念集成（§3.2.8）、硬约束引擎（§2.2第二层）、作业任务聚合（§2.2第三层）；架构图新增C-05硬约束引擎和Work Task Aggregate | 产品架构团队 |
 | v3.0 | 2026-03-10 | 整合5大优化方向：认知决策层、数据骨干网、边缘弹性、多租户SaaS、安全治理；架构从四层升级至八层 | 产品架构团队 |
 | v1.0 | 2026-03-10 | 初始版本，定义四层解耦架构 | 产品架构团队 |
 
