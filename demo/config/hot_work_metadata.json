@@ -1,0 +1,269 @@
+{
+  "workType": "hot_work",
+  "version": "1.0.0",
+  "formSchema": {
+    "work_zone": {
+      "type": "text",
+      "label": "作业区域",
+      "required": true,
+      "placeholder": "请输入作业区域"
+    },
+    "work_level": {
+      "type": "radio",
+      "label": "作业级别",
+      "required": true,
+      "options": [
+        { "value": "special", "label": "特级（生产运行装置/罐区）" },
+        { "value": "level1", "label": "一级（易燃易爆场所）" },
+        { "value": "level2", "label": "二级（其他动火作业）" }
+      ]
+    },
+    "work_method": {
+      "type": "select",
+      "label": "动火方式",
+      "required": true,
+      "options": [
+        { "value": "electric_welding", "label": "电焊" },
+        { "value": "gas_welding", "label": "气焊" },
+        { "value": "cutting", "label": "切割" },
+        { "value": "grinding", "label": "打磨" }
+      ]
+    },
+    "apply_time": {
+      "type": "datetime",
+      "label": "申请时间",
+      "required": true,
+      "readOnly": true,
+      "default": "now()"
+    },
+    "work_time_start": {
+      "type": "datetime",
+      "label": "计划开始时间",
+      "required": true,
+      "validation": "value >= apply_time + 86400000",
+      "errorMsg": "开始时间必须在申请时间 24 小时后"
+    },
+    "work_time_end": {
+      "type": "datetime",
+      "label": "计划结束时间",
+      "required": true,
+      "validation": "value > work_time_start",
+      "errorMsg": "结束时间必须晚于开始时间"
+    },
+    "work_leader": {
+      "type": "user_select",
+      "label": "作业负责人",
+      "required": true
+    },
+    "workers": {
+      "type": "user_multi_select",
+      "label": "作业人员",
+      "required": true,
+      "minCount": 1
+    },
+    "supervisor": {
+      "type": "user_select",
+      "label": "监护人",
+      "required": true
+    },
+    "gas_detector": {
+      "type": "user_select",
+      "label": "气体检测人",
+      "required": true,
+      "certificateRequired": true
+    },
+    "safety_briefer": {
+      "type": "user_select",
+      "label": "安全交底人",
+      "required": true
+    },
+    "fire_extinguishers": {
+      "type": "number",
+      "label": "灭火器数量",
+      "required": true,
+      "min": 2,
+      "unit": "个"
+    },
+    "blind_plate_isolation": {
+      "type": "checkbox",
+      "label": "盲板隔离（不能用阀门代替）",
+      "required": true,
+      "visibleIf": "data.work_level == 'special'"
+    },
+    "gas_detection": {
+      "type": "checkbox",
+      "label": "气体检测合格",
+      "required": true
+    },
+    "warning_area": {
+      "type": "checkbox",
+      "label": "设置警戒区域",
+      "required": true
+    },
+    "combustible_cleared": {
+      "type": "checkbox",
+      "label": "清理可燃物",
+      "required": true
+    },
+    "environment_check": {
+      "type": "checkbox_group",
+      "label": "周围环境检查",
+      "required": true,
+      "options": [
+        { "value": "no_liquid_15m", "label": "15m 内无可燃液体排放" },
+        { "value": "no_gas_30m", "label": "30m 内无可燃气体排放" },
+        { "value": "no_painting_10m", "label": "10m 内无油漆作业" }
+      ]
+    },
+    "gas_detection_records": {
+      "type": "dynamic_table",
+      "label": "气体检测记录",
+      "visibleIf": "state == 'Verify'",
+      "requiredIf": "state == 'Verify'",
+      "minRows": 1,
+      "columns": [
+        {
+          "key": "detection_time",
+          "type": "datetime",
+          "label": "检测时间",
+          "required": true
+        },
+        {
+          "key": "combustible_gas",
+          "type": "number",
+          "label": "可燃气体(%LEL)",
+          "required": true,
+          "max": 0.5,
+          "unit": "%LEL",
+          "validation": "value <= 0.5",
+          "errorMsg": "可燃气体浓度必须 ≤ 0.5%LEL"
+        },
+        {
+          "key": "oxygen",
+          "type": "number",
+          "label": "氧气(%)",
+          "required": true,
+          "min": 19.5,
+          "max": 23.5,
+          "unit": "%",
+          "validation": "value >= 19.5 && value <= 23.5",
+          "errorMsg": "氧气含量必须在 19.5%-23.5% 之间"
+        },
+        {
+          "key": "toxic_gas",
+          "type": "number",
+          "label": "有毒气体(ppm)",
+          "required": false,
+          "unit": "ppm"
+        },
+        {
+          "key": "detector_signature",
+          "type": "signature",
+          "label": "检测人签名",
+          "required": true
+        }
+      ]
+    },
+    "site_photos": {
+      "type": "image_upload",
+      "label": "现场照片",
+      "required": true,
+      "minCount": 3,
+      "maxCount": 9,
+      "props": {
+        "source": "camera_only",
+        "aiReview": true
+      }
+    },
+    "hot_work_video": {
+      "type": "video_upload",
+      "label": "全过程作业影像",
+      "visibleIf": "data.work_level == 'special'",
+      "requiredIf": "data.work_level == 'special'",
+      "description": "需使用防爆设备录制"
+    },
+    "approver_signature": {
+      "type": "signature",
+      "label": "审批人签名",
+      "visibleIf": "state == 'Verify' || state == 'Executing'",
+      "requiredIf": "state == 'Verify'"
+    },
+    "work_leader_signature": {
+      "type": "signature",
+      "label": "作业负责人签名",
+      "visibleIf": "state == 'Executing' || state == 'Closed'",
+      "requiredIf": "state == 'Executing'"
+    },
+    "supervisor_signature": {
+      "type": "signature",
+      "label": "监护人签名",
+      "visibleIf": "state == 'Executing' || state == 'Closed'",
+      "requiredIf": "state == 'Executing'"
+    }
+  },
+  "layoutConfig": {
+    "breakpoints": {
+      "mobile": "<768px",
+      "tablet": "768px-1024px",
+      "desktop": ">1024px"
+    },
+    "cards": [
+      {
+        "id": "basic_info",
+        "title": "基础信息",
+        "fields": ["work_zone", "work_level", "work_method", "apply_time", "work_time_start", "work_time_end"],
+        "layout": {
+          "mobile": "stack",
+          "desktop": "grid-2col"
+        }
+      },
+      {
+        "id": "personnel_info",
+        "title": "人员信息",
+        "fields": ["work_leader", "workers", "supervisor", "gas_detector", "safety_briefer"],
+        "layout": {
+          "mobile": "stack",
+          "desktop": "grid-2col"
+        }
+      },
+      {
+        "id": "safety_measures",
+        "title": "安全措施",
+        "fields": ["fire_extinguishers", "blind_plate_isolation", "gas_detection", "warning_area", "combustible_cleared", "environment_check"],
+        "layout": {
+          "mobile": "stack",
+          "desktop": "grid-2col"
+        }
+      },
+      {
+        "id": "gas_detection_records",
+        "title": "气体检测记录",
+        "fields": ["gas_detection_records"],
+        "visibleIf": "state == 'Verify'",
+        "layout": {
+          "mobile": "stack",
+          "desktop": "full-width"
+        }
+      },
+      {
+        "id": "attachments",
+        "title": "现场照片与影像",
+        "fields": ["site_photos", "hot_work_video"],
+        "layout": {
+          "mobile": "stack",
+          "desktop": "grid-2col"
+        }
+      },
+      {
+        "id": "signatures",
+        "title": "签名确认",
+        "fields": ["approver_signature", "work_leader_signature", "supervisor_signature"],
+        "visibleIf": "state == 'Verify' || state == 'Executing' || state == 'Closed'",
+        "layout": {
+          "mobile": "stack",
+          "desktop": "grid-3col"
+        }
+      }
+    ]
+  }
+}

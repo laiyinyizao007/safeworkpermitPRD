@@ -1,0 +1,81 @@
+{
+  "fieldLevelConstraints": {
+    "work_time_start": {
+      "validation": "value >= apply_time + 86400000",
+      "errorMsg": "开始时间必须在申请时间 24 小时后"
+    },
+    "work_time_end": {
+      "validation": "value > work_time_start",
+      "errorMsg": "结束时间必须晚于开始时间"
+    },
+    "gas_detection_records.combustible_gas": {
+      "validation": "value <= 0.5",
+      "errorMsg": "可燃气体浓度必须 ≤ 0.5%LEL"
+    },
+    "gas_detection_records.oxygen": {
+      "validation": "value >= 19.5 && value <= 23.5",
+      "errorMsg": "氧气含量必须在 19.5%-23.5% 之间"
+    }
+  },
+  "fieldDependencies": {
+    "blind_plate_isolation": {
+      "visibleIf": "data.work_level == 'special'",
+      "requiredIf": "data.work_level == 'special'"
+    },
+    "hot_work_video": {
+      "visibleIf": "data.work_level == 'special'",
+      "requiredIf": "data.work_level == 'special'"
+    },
+    "gas_detection_records": {
+      "visibleIf": "state == 'Verify'",
+      "requiredIf": "state == 'Verify'"
+    },
+    "approver_signature": {
+      "visibleIf": "state == 'Verify' || state == 'Executing'",
+      "requiredIf": "state == 'Verify'"
+    },
+    "work_leader_signature": {
+      "visibleIf": "state == 'Executing' || state == 'Closed'",
+      "requiredIf": "state == 'Executing'"
+    },
+    "supervisor_signature": {
+      "visibleIf": "state == 'Executing' || state == 'Closed'",
+      "requiredIf": "state == 'Executing'"
+    }
+  },
+  "hardConstraints": {
+    "site_photos": {
+      "source": "camera_only",
+      "minCount": 3,
+      "aiReview": true,
+      "description": "必须现场拍摄，至少 3 张"
+    },
+    "gas_detector": {
+      "certificateRequired": true,
+      "description": "必须持有有效气体检测证书"
+    }
+  },
+  "conditionalLogic": [
+    {
+      "condition": "data.work_level == 'special'",
+      "actions": [
+        { "field": "blind_plate_isolation", "action": "show_and_require" },
+        { "field": "hot_work_video", "action": "show_and_require" }
+      ]
+    },
+    {
+      "condition": "state == 'Verify'",
+      "actions": [
+        { "field": "gas_detection_records", "action": "show_and_require" },
+        { "field": "approver_signature", "action": "show_and_require" }
+      ]
+    },
+    {
+      "condition": "state == 'Executing'",
+      "actions": [
+        { "field": "work_leader_signature", "action": "show_and_require" },
+        { "field": "supervisor_signature", "action": "show_and_require" }
+      ]
+    }
+  ]
+}

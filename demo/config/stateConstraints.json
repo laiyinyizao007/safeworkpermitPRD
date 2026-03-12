@@ -1,0 +1,22 @@
+{
+  "Draft": {
+    "readonlyFields": ["apply_time"],
+    "hiddenFields": ["gas_detection_records", "approver_signature", "work_leader_signature", "supervisor_signature"],
+    "editableFields": ["work_zone", "work_level", "work_method", "work_time_start", "work_time_end", "work_leader", "workers", "supervisor", "gas_detector", "safety_briefer", "fire_extinguishers", "blind_plate_isolation", "gas_detection", "warning_area", "combustible_cleared", "environment_check", "site_photos", "hot_work_video"]
+  },
+  "Verify": {
+    "readonlyFields": ["apply_time", "work_zone", "work_level", "work_method", "work_time_start", "work_time_end", "work_leader", "workers", "supervisor", "gas_detector", "safety_briefer", "fire_extinguishers", "blind_plate_isolation", "gas_detection", "warning_area", "combustible_cleared", "environment_check", "site_photos", "hot_work_video"],
+    "editableFields": ["gas_detection_records", "approver_signature"],
+    "requiredFields": ["gas_detection_records", "approver_signature"]
+  },
+  "Executing": {
+    "readonlyFields": ["apply_time", "work_zone", "work_level", "work_method", "work_time_start", "work_time_end", "work_leader", "workers", "supervisor", "gas_detector", "safety_briefer", "fire_extinguishers", "blind_plate_isolation", "gas_detection", "warning_area", "combustible_cleared", "environment_check", "site_photos", "hot_work_video", "gas_detection_records", "approver_signature"],
+    "editableFields": ["work_leader_signature", "supervisor_signature"],
+    "watermark": "作业进行中"
+  },
+  "Closed": {
+    "readonlyFields": "all",
+    "watermark": "已归档",
+    "actions": ["download_pdf"]
+  }
+}

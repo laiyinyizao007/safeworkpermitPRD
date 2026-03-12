@@ -1,0 +1,77 @@
+{
+  "displayMode": "card_stack",
+  "cardStyle": {
+    "padding": "16px",
+    "margin": "12px 0",
+    "borderRadius": "8px",
+    "shadow": "0 2px 8px rgba(0,0,0,0.1)"
+  },
+  "fieldLayout": "vertical_stack",
+  "inputStyle": {
+    "height": "44px",
+    "fontSize": "16px"
+  },
+  "cards": [
+    {
+      "id": "basic_info",
+      "title": "基础信息",
+      "fields": [
+        { "key": "work_zone", "span": "full" },
+        { "key": "work_level", "span": "full" },
+        { "key": "work_method", "span": "full" },
+        { "key": "apply_time", "span": "full" },
+        { "key": "work_time_start", "span": "full" },
+        { "key": "work_time_end", "span": "full" }
+      ]
+    },
+    {
+      "id": "personnel_info",
+      "title": "人员信息",
+      "fields": [
+        { "key": "work_leader", "span": "full" },
+        { "key": "workers", "span": "full" },
+        { "key": "supervisor", "span": "full" },
+        { "key": "gas_detector", "span": "full" },
+        { "key": "safety_briefer", "span": "full" }
+      ]
+    },
+    {
+      "id": "safety_measures",
+      "title": "安全措施",
+      "fields": [
+        { "key": "fire_extinguishers", "span": "full" },
+        { "key": "blind_plate_isolation", "span": "full" },
+        { "key": "gas_detection", "span": "full" },
+        { "key": "warning_area", "span": "full" },
+        { "key": "combustible_cleared", "span": "full" },
+        { "key": "environment_check", "span": "full" }
+      ]
+    },
+    {
+      "id": "gas_detection_records",
+      "title": "气体检测记录",
+      "visibleIf": "state == 'Verify'",
+      "fields": [
+        { "key": "gas_detection_records", "span": "full" }
+      ]
+    },
+    {
+      "id": "attachments",
+      "title": "现场照片与影像",
+      "fields": [
+        { "key": "site_photos", "span": "full" },
+        { "key": "hot_work_video", "span": "full" }
+      ]
+    },
+    {
+      "id": "signatures",
+      "title": "签名确认",
+      "visibleIf": "state == 'Verify' || state == 'Executing' || state == 'Closed'",
+      "fields": [
+        { "key": "approver_signature", "span": "full" },
+        { "key": "work_leader_signature", "span": "full" },
+        { "key": "supervisor_signature", "span": "full" }
+      ]
+    }
+  ]
+}

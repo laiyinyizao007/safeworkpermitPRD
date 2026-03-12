@@ -1,0 +1,84 @@
+{
+  "displayMode": "two_column_grid",
+  "containerStyle": {
+    "maxWidth": "1200px",
+    "margin": "0 auto",
+    "padding": "24px"
+  },
+  "cardStyle": {
+    "padding": "24px",
+    "margin": "16px 0",
+    "borderRadius": "8px",
+    "shadow": "0 2px 12px rgba(0,0,0,0.08)"
+  },
+  "gridGap": "16px",
+  "cards": [
+    {
+      "id": "basic_info",
+      "title": "基础信息",
+      "columns": 2,
+      "fields": [
+        { "key": "work_zone", "span": 1 },
+        { "key": "work_level", "span": 1 },
+        { "key": "work_method", "span": 1 },
+        { "key": "apply_time", "span": 1 },
+        { "key": "work_time_start", "span": 1 },
+        { "key": "work_time_end", "span": 1 }
+      ]
+    },
+    {
+      "id": "personnel_info",
+      "title": "人员信息",
+      "columns": 2,
+      "fields": [
+        { "key": "work_leader", "span": 1 },
+        { "key": "workers", "span": 1 },
+        { "key": "supervisor", "span": 1 },
+        { "key": "gas_detector", "span": 1 },
+        { "key": "safety_briefer", "span": 2 }
+      ]
+    },
+    {
+      "id": "safety_measures",
+      "title": "安全措施",
+      "columns": 2,
+      "fields": [
+        { "key": "fire_extinguishers", "span": 1 },
+        { "key": "blind_plate_isolation", "span": 1 },
+        { "key": "gas_detection", "span": 1 },
+        { "key": "warning_area", "span": 1 },
+        { "key": "combustible_cleared", "span": 1 },
+        { "key": "environment_check", "span": 2 }
+      ]
+    },
+    {
+      "id": "gas_detection_records",
+      "title": "气体检测记录",
+      "visibleIf": "state == 'Verify'",
+      "columns": 1,
+      "fields": [
+        { "key": "gas_detection_records", "span": 1 }
+      ]
+    },
+    {
+      "id": "attachments",
+      "title": "现场照片与影像",
+      "columns": 2,
+      "fields": [
+        { "key": "site_photos", "span": 1 },
+        { "key": "hot_work_video", "span": 1 }
+      ]
+    },
+    {
+      "id": "signatures",
+      "title": "签名确认",
+      "visibleIf": "state == 'Verify' || state == 'Executing' || state == 'Closed'",
+      "columns": 3,
+      "fields": [
+        { "key": "approver_signature", "span": 1 },
+        { "key": "work_leader_signature", "span": 1 },
+        { "key": "supervisor_signature", "span": 1 }
+      ]
+    }
+  ]
+}

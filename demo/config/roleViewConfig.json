@@ -1,0 +1,40 @@
+{
+  "applicant": {
+    "label": "申请人",
+    "editableStates": ["Draft"],
+    "viewableFields": "all",
+    "editableFields": {
+      "Draft": ["work_zone", "work_level", "work_method", "work_time_start", "work_time_end", "work_leader", "workers", "supervisor", "gas_detector", "safety_briefer", "fire_extinguishers", "blind_plate_isolation", "gas_detection", "warning_area", "combustible_cleared", "environment_check", "site_photos", "hot_work_video"]
+    }
+  },
+  "approver": {
+    "label": "审批人",
+    "editableStates": ["Verify"],
+    "viewableFields": "all",
+    "editableFields": {
+      "Verify": ["gas_detection_records", "approver_signature"]
+    }
+  },
+  "work_leader": {
+    "label": "作业负责人",
+    "editableStates": ["Executing"],
+    "viewableFields": "all",
+    "editableFields": {
+      "Executing": ["work_leader_signature"]
+    }
+  },
+  "supervisor": {
+    "label": "监护人",
+    "editableStates": ["Executing"],
+    "viewableFields": "all",
+    "editableFields": {
+      "Executing": ["supervisor_signature"]
+    }
+  },
+  "viewer": {
+    "label": "查看者",
+    "editableStates": [],
+    "viewableFields": "all",
+    "editableFields": {}
+  }
+}
